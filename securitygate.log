@@ -1,0 +1,156 @@
+nohup: no se tendrá en cuenta la entrada
+Compilando...
+info: Sentinel.SecurityGate.Service[0]
+      Sentinel SecurityGate Service iniciado
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      ScanResultListener iniciado
+info: Sentinel.SecurityGate.Service.Services.RabbitMqService[0]
+      RabbitMQ inicializado correctamente
+info: Sentinel.SecurityGate.Service.Services.RabbitMqService[0]
+      Escuchando mensajes en la cola security-gate.scan.results.queue
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanRequestListener[0]
+      ScanRequestListener iniciado
+info: Sentinel.SecurityGate.Service.Services.RabbitMqService[0]
+      Escuchando solicitudes de escaneo en la cola security-gate.scan.requests.queue
+info: Sentinel.SecurityGate.Service.Services.RabbitMqService[0]
+      Mensaje recibido de la cola security-gate.scan.results.queue
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5275
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /home/samup/Música/sentinel/Sentinel.SeurityGate.Service
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado de escaneo recibido. ScanId: 00000000-0000-0000-0000-000000000000, Status: Completed, QualityGate: False
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado procesado exitosamente para ScanId: 00000000-0000-0000-0000-000000000000
+info: Sentinel.SecurityGate.Service.Services.RabbitMqService[0]
+      Mensaje recibido de la cola security-gate.scan.results.queue
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado de escaneo recibido. ScanId: 00000000-0000-0000-0000-000000000000, Status: Completed, QualityGate: False
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado procesado exitosamente para ScanId: 00000000-0000-0000-0000-000000000000
+info: Sentinel.SecurityGate.Service.Services.RabbitMqService[0]
+      Mensaje recibido de la cola security-gate.scan.results.queue
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado de escaneo recibido. ScanId: 00000000-0000-0000-0000-000000000000, Status: Completed, QualityGate: False
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado procesado exitosamente para ScanId: 00000000-0000-0000-0000-000000000000
+info: Sentinel.SecurityGate.Service.Services.RabbitMqService[0]
+      Mensaje recibido de la cola security-gate.scan.results.queue
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado de escaneo recibido. ScanId: 00000000-0000-0000-0000-000000000000, Status: Completed, QualityGate: False
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado procesado exitosamente para ScanId: 00000000-0000-0000-0000-000000000000
+info: Sentinel.SecurityGate.Service.Services.RabbitMqService[0]
+      Mensaje recibido de la cola security-gate.scan.results.queue
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado de escaneo recibido. ScanId: 00000000-0000-0000-0000-000000000000, Status: Completed, QualityGate: False
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado procesado exitosamente para ScanId: 00000000-0000-0000-0000-000000000000
+info: Sentinel.SecurityGate.Service.Services.RabbitMqService[0]
+      Mensaje recibido de la cola security-gate.scan.results.queue
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado de escaneo recibido. ScanId: 00000000-0000-0000-0000-000000000000, Status: Completed, QualityGate: False
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado procesado exitosamente para ScanId: 00000000-0000-0000-0000-000000000000
+info: Sentinel.SecurityGate.Service.Services.RabbitMqService[0]
+      Mensaje recibido de la cola security-gate.scan.results.queue
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado de escaneo recibido. ScanId: 00000000-0000-0000-0000-000000000000, Status: Completed, QualityGate: False
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado procesado exitosamente para ScanId: 00000000-0000-0000-0000-000000000000
+info: Sentinel.SecurityGate.Service.Services.RabbitMqService[0]
+      Solicitud de escaneo recibida en la cola security-gate.scan.requests.queue
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanRequestListener[0]
+      Procesando mensaje de solicitud de escaneo: {"scanId":"22222222-2222-2222-2222-222222222222","requestedService":"DAST","targetUrl":"https://example.com"}
+info: Sentinel.SecurityGate.Service.Services.HttpScanOrchestrator[0]
+      Iniciando workflow de DAST con ScanId: 22222222-2222-2222-2222-222222222222
+dbug: Sentinel.SecurityGate.Service.Services.HttpScanOrchestrator[0]
+      Payload enviado a n8n: {
+        "scanId": "22222222-2222-2222-2222-222222222222",
+        "scanType": "DAST",
+        "clientId": null,
+        "timestamp": "2025-12-12T21:46:48.006101Z",
+        "target": {
+          "url": "https://example.com",
+          "scope": []
+        },
+        "authentication": null,
+        "spider": {
+          "enabled": true,
+          "maxDepth": 5,
+          "seedUrls": [],
+          "excludePatterns": [],
+          "timeoutMinutes": 10
+        },
+        "config": {
+          "timeoutMinutes": 60,
+          "additionalConfig": null
+        }
+      }
+info: System.Net.Http.HttpClient.Default.LogicalHandler[100]
+      Start processing HTTP request POST http://n8n:5678/webhook/scan/dast
+info: System.Net.Http.HttpClient.Default.ClientHandler[100]
+      Sending HTTP request POST http://n8n:5678/webhook/scan/dast
+fail: Sentinel.SecurityGate.Service.Services.HttpScanOrchestrator[0]
+      Excepción al iniciar workflow para DAST
+      System.Net.Http.HttpRequestException: Resource temporarily unavailable (n8n:5678)
+       ---> System.Net.Sockets.SocketException (11): Resource temporarily unavailable
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.AddHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|5_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+         at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|5_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+         at Sentinel.SecurityGate.Service.Services.HttpScanOrchestrator.StartScanWorkflowAsync(ScanCommandDto command) in /home/samup/Música/sentinel/Sentinel.SeurityGate.Service/Services/HttpScanOrchestrator.cs:line 59
+fail: Sentinel.SecurityGate.Service.BackgroundServices.ScanRequestListener[0]
+      Error procesando solicitud de escaneo desde RabbitMQ
+      System.Net.Http.HttpRequestException: Resource temporarily unavailable (n8n:5678)
+       ---> System.Net.Sockets.SocketException (11): Resource temporarily unavailable
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.AddHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|5_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+         at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|5_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+         at Sentinel.SecurityGate.Service.Services.HttpScanOrchestrator.StartScanWorkflowAsync(ScanCommandDto command) in /home/samup/Música/sentinel/Sentinel.SeurityGate.Service/Services/HttpScanOrchestrator.cs:line 59
+         at Sentinel.SecurityGate.Service.BackgroundServices.ScanRequestListener.ProcessMessageAsync(String message, IServiceProvider serviceProvider) in /home/samup/Música/sentinel/Sentinel.SeurityGate.Service/BackgroundServices/ScanRequestListener.cs:line 61
+info: Sentinel.SecurityGate.Service.Services.RabbitMqService[0]
+      Mensaje recibido de la cola security-gate.scan.results.queue
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado de escaneo recibido. ScanId: 00000000-0000-0000-0000-000000000000, Status: Completed, QualityGate: False
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado procesado exitosamente para ScanId: 00000000-0000-0000-0000-000000000000
+info: Sentinel.SecurityGate.Service.Services.RabbitMqService[0]
+      Mensaje recibido de la cola security-gate.scan.results.queue
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado de escaneo recibido. ScanId: 00000000-0000-0000-0000-000000000000, Status: Completed, QualityGate: False
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado procesado exitosamente para ScanId: 00000000-0000-0000-0000-000000000000
+info: Sentinel.SecurityGate.Service.Services.RabbitMqService[0]
+      Mensaje recibido de la cola security-gate.scan.results.queue
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado de escaneo recibido. ScanId: 00000000-0000-0000-0000-000000000000, Status: Completed, QualityGate: False
+info: Sentinel.SecurityGate.Service.BackgroundServices.ScanResultListener[0]
+      Resultado procesado exitosamente para ScanId: 00000000-0000-0000-0000-000000000000
