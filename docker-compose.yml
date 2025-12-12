@@ -1,0 +1,371 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: sentinel-postgres
+    environment:
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: sentinel123
+      POSTGRES_DB: sentinel_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sentinel"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sentinel-network
+
+  # MongoDB
+  mongodb:
+    image: mongo:latest
+    container_name: sentinel-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: sentinel
+      MONGO_INITDB_ROOT_PASSWORD: sentinel123
+      MONGO_INITDB_DATABASE: sentinel_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sentinel-network
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: sentinel-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: sentinel
+      RABBITMQ_DEFAULT_PASS: sentinel123
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sentinel-network
+
+  # Kong API Gateway
+  kong-db:
+    image: postgres:15-alpine
+    container_name: sentinel-kong-db
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong123
+      POSTGRES_DB: kong
+    ports:
+      - "5433:5432"
+    volumes:
+      - kong_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sentinel-network
+
+  kong-migration:
+    image: kong:3-alpine
+    container_name: sentinel-kong-migration
+    command: kong migrations bootstrap
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong123
+    depends_on:
+      kong-db:
+        condition: service_healthy
+    networks:
+      - sentinel-network
+
+  kong:
+    image: kong:3-alpine
+    container_name: sentinel-kong
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong123
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "8001:8001"
+      - "8444:8444"
+    depends_on:
+      kong-migration:
+        condition: service_completed_successfully
+    networks:
+      - sentinel-network
+
+  konga:
+    image: pantsel/konga:latest
+    container_name: sentinel-konga
+    environment:
+      NODE_ENV: production
+      DB_ADAPTER: postgres
+      DB_HOST: kong-db
+      DB_USER: kong
+      DB_PASSWORD: kong123
+      DB_DATABASE: konga
+    ports:
+      - "1337:1337"
+    depends_on:
+      kong-db:
+        condition: service_healthy
+    networks:
+      - sentinel-network
+
+  # Java Services
+  auth-service:
+    build:
+      context: ./auth-service-java
+      dockerfile: Dockerfile
+    container_name: sentinel-auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
+      SPRING_DATASOURCE_USERNAME: sentinel
+      SPRING_DATASOURCE_PASSWORD: sentinel123
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: sentinel
+      SPRING_RABBITMQ_PASSWORD: sentinel123
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sentinel-network
+
+  tenant-service:
+    build:
+      context: ./tenant-service
+      dockerfile: Dockerfile
+    container_name: sentinel-tenant-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
+      SPRING_DATASOURCE_USERNAME: sentinel
+      SPRING_DATASOURCE_PASSWORD: sentinel123
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: sentinel
+      SPRING_RABBITMQ_PASSWORD: sentinel123
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sentinel-network
+
+  project-service:
+    build:
+      context: ./project-service
+      dockerfile: Dockerfile
+    container_name: sentinel-project-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
+      SPRING_DATASOURCE_USERNAME: sentinel
+      SPRING_DATASOURCE_PASSWORD: sentinel123
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: sentinel
+      SPRING_RABBITMQ_PASSWORD: sentinel123
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sentinel-network
+
+  scaner-orchestrator-service:
+    build:
+      context: ./scaner-orchestrator-service
+      dockerfile: Dockerfile
+    container_name: sentinel-scaner-orchestrator
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
+      SPRING_DATASOURCE_USERNAME: sentinel
+      SPRING_DATASOURCE_PASSWORD: sentinel123
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: sentinel
+      SPRING_RABBITMQ_PASSWORD: sentinel123
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sentinel-network
+
+  results-aggregator-service:
+    build:
+      context: ./results-aggregator-service
+      dockerfile: Dockerfile
+    container_name: sentinel-results-aggregator
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
+      SPRING_DATASOURCE_USERNAME: sentinel
+      SPRING_DATASOURCE_PASSWORD: sentinel123
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: sentinel
+      SPRING_RABBITMQ_PASSWORD: sentinel123
+      MONGODB_URI: mongodb://sentinel:sentinel123@mongodb:27017/sentinel_db?authSource=admin
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sentinel-network
+
+  user-management-service:
+    build:
+      context: ./user-management-service
+      dockerfile: Dockerfile
+    container_name: sentinel-user-management
+    ports:
+      - "8088:8088"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
+      SPRING_DATASOURCE_USERNAME: sentinel
+      SPRING_DATASOURCE_PASSWORD: sentinel123
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: sentinel
+      SPRING_RABBITMQ_PASSWORD: sentinel123
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sentinel-network
+
+  backend-for-frontend-service:
+    build:
+      context: ./backend-for-frontend-service
+      dockerfile: Dockerfile
+    container_name: sentinel-bff-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
+      SPRING_DATASOURCE_USERNAME: sentinel
+      SPRING_DATASOURCE_PASSWORD: sentinel123
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: sentinel
+      SPRING_RABBITMQ_PASSWORD: sentinel123
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sentinel-network
+
+  # C# Services
+  security-gate-service:
+    build:
+      context: ./Sentinel.SeurityGate.Service
+      dockerfile: Dockerfile
+    container_name: sentinel-security-gate
+    ports:
+      - "5001:5001"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=postgres;Port=5432;Database=sentinel_db;User Id=sentinel;Password=sentinel123;"
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Username: sentinel
+      RabbitMQ__Password: sentinel123
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sentinel-network
+
+  code-quality-service:
+    build:
+      context: ./Sentinel.CodeQuality.Service
+      dockerfile: Dockerfile
+    container_name: sentinel-code-quality
+    ports:
+      - "5002:5001"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=postgres;Port=5432;Database=sentinel_db;User Id=sentinel;Password=sentinel123;"
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Username: sentinel
+      RabbitMQ__Password: sentinel123
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sentinel-network
+
+  vulnerability-service:
+    build:
+      context: ./Sentinel.Vulnerability.Service
+      dockerfile: Dockerfile
+    container_name: sentinel-vulnerability
+    ports:
+      - "5003:5001"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=postgres;Port=5432;Database=sentinel_db;User Id=sentinel;Password=sentinel123;"
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Username: sentinel
+      RabbitMQ__Password: sentinel123
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - sentinel-network
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  rabbitmq_data:
+  kong_db_data:
+
+networks:
+  sentinel-network:
+    driver: bridge
