@@ -82,7 +82,7 @@ services:
       - sentinel-network
 
   kong-migration:
-    image: kong:3-alpine
+    image: kong:alpine
     container_name: sentinel-kong-migration
     command: kong migrations bootstrap
     environment:
@@ -97,7 +97,7 @@ services:
       - sentinel-network
 
   kong:
-    image: kong:3-alpine
+    image: kong:alpine
     container_name: sentinel-kong
     environment:
       KONG_DATABASE: postgres
@@ -109,6 +109,8 @@ services:
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
+    volumes:
+      - ./API-Gateway/kong.yml:/etc/kong/kong.yml:ro
     ports:
       - "8000:8000"
       - "8443:8443"
@@ -144,15 +146,64 @@ services:
       context: ./auth-service-java
       dockerfile: Dockerfile
     container_name: sentinel-auth-service
+    volumes:
+      - ./auth-service-java/src/main/resources/application.properties:/app/config/application.properties
     ports:
       - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_auth
       SPRING_DATASOURCE_USERNAME: sentinel
       SPRING_DATASOURCE_PASSWORD: sentinel123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      
+      # RabbitMQ
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_USERNAME: sentinel
       SPRING_RABBITMQ_PASSWORD: sentinel123
+      
+      # Service URLs
+      SERVICES_TENANT_URL: http://tenant-service:8082
+      SERVICES_BILLING_URL: http://billing-service:8084
+      SERVICES_USER_MGMT_URL: http://user-management-service:8088
+      
+      # JWT
+      JWT_SECRET: X9q2N8ZCnO3Tj48p1Fk6B2V0x8Teq9gHBV0SX1e2p6U=
+      JWT_EXPIRATION: 3600000
+      JWT_REFRESH_EXPIRATION: 2592000000
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+      
+      # Auth Events
+      AUTH_EVENTS_EXCHANGE: auth-exchange
+      AUTH_EVENTS_USER_REGISTERED_ROUTING_KEY: auth.user.registered
+      AUTH_EVENTS_USER_LOGIN_ROUTING_KEY: auth.user.login
+      
+      # CORS
+      APP_CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001,http://localhost:5173,http://localhost:5174,http://localhost:8000
+      
+      # OAuth2 Client Registration (Force Injection)
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID: 103393455556-3s3q2gd8mngmvcuphfidn26si6n6mlc8.apps.googleusercontent.com
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: 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
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_REDIRECT_URI: "{baseUrl}/api/auth/oauth2/callback/google"
+      
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_CLIENT_ID: 3b7c4a0f-81b0-4b6c-945c-ec9504fb30dc
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_CLIENT_SECRET: 7b3a56a0-7620-4ff3-b217-c0dc482725b5
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_REDIRECT_URI: "{baseUrl}/api/auth/oauth2/callback/microsoft"
+
+      
+
+
+      
+      # Mail (Mock)
+      SPRING_MAIL_HOST: localhost
+      SPRING_MAIL_PORT: 1025
+      SPRING_MAIL_USERNAME: test
+      SPRING_MAIL_PASSWORD: test
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
+      
+
+
     depends_on:
       postgres:
         condition: service_healthy
@@ -282,17 +333,57 @@ services:
     ports:
       - "8080:8080"
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
       SPRING_DATASOURCE_USERNAME: sentinel
       SPRING_DATASOURCE_PASSWORD: sentinel123
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_USERNAME: sentinel
       SPRING_RABBITMQ_PASSWORD: sentinel123
+      SPRING_DATA_MONGODB_URI: mongodb://sentinel:sentinel123@mongodb:27017/sentinel_bff_cache?authSource=admin
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - sentinel-network
+
+  billing-service:
+    build:
+      context: ./Billings
+      dockerfile: Dockerfile
+    container_name: sentinel-billing
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
+      SPRING_DATASOURCE_USERNAME: sentinel
+      SPRING_DATASOURCE_PASSWORD: sentinel123
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: sentinel
+      SPRING_RABBITMQ_PASSWORD: sentinel123
+      SERVER_PORT: 8084
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     networks:
       - sentinel-network
 
@@ -307,7 +398,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Server=postgres;Port=5432;Database=sentinel_db;User Id=sentinel;Password=sentinel123;"
-      RabbitMQ__Host: rabbitmq
+      RabbitMQ__HostName: rabbitmq
       RabbitMQ__Username: sentinel
       RabbitMQ__Password: sentinel123
     depends_on:
@@ -328,7 +419,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Server=postgres;Port=5432;Database=sentinel_db;User Id=sentinel;Password=sentinel123;"
-      RabbitMQ__Host: rabbitmq
+      RabbitMQ__HostName: rabbitmq
       RabbitMQ__Username: sentinel
       RabbitMQ__Password: sentinel123
     depends_on:
@@ -349,7 +440,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Server=postgres;Port=5432;Database=sentinel_db;User Id=sentinel;Password=sentinel123;"
-      RabbitMQ__Host: rabbitmq
+      RabbitMQ__HostName: rabbitmq
       RabbitMQ__Username: sentinel
       RabbitMQ__Password: sentinel123
     depends_on:
