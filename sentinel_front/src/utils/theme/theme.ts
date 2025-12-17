@@ -6,8 +6,6 @@ export interface ThemeConfig {
   colors: typeof palette.colors.layout;
   mode: ThemeMode;
 }
-
-// Tema oscuro (por defecto - como OCTO SMM)
 export const darkTheme: ThemeConfig = {
   mode: 'dark',
   colors: {
