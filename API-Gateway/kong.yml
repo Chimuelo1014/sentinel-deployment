@@ -247,6 +247,8 @@ plugins:
         - "http://localhost:3000"
         - "http://localhost:3001"
         - "http://localhost:8000"
+        - "https://sentinel.crudzaso.com"
+        - "https://service.sentinel.crudzaso.com"
       methods:
         - GET
         - HEAD
