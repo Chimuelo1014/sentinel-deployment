@@ -28,14 +28,13 @@ jobs:
           
           cd ${{ env.DEPLOY_PATH }}
           
-          echo "🛑 Stopping all services with docker-compose..."
+          echo "🛑 Stopping all services..."
           docker-compose -f docker-compose.yml --env-file .env.production down -v --remove-orphans 2>/dev/null || true
           
-          echo "🗑️ Force removing ALL containers..."
-          docker rm -f $(docker ps -aq) 2>/dev/null || true
+          echo "🗑️ Force removing sentinel containers..."
+          docker ps -a --filter "name=sentinel" -q | xargs -r docker rm -f 2>/dev/null || true
           
-          echo "🌐 Removing Docker networks..."
-          docker network rm $(docker network ls -q) 2>/dev/null || true
+          echo "🧹 Cleaning up networks..."
           docker network prune -f || true
           
           echo "🔄 Pulling latest code..."
@@ -49,7 +48,7 @@ jobs:
           docker-compose -f docker-compose.yml --env-file .env.production up -d
           
           echo "⏳ Waiting for services to start..."
-          sleep 15
+          sleep 20
           
           echo "🧹 Cleaning up unused images..."
           docker image prune -f
