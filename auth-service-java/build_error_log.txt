@@ -1,0 +1,39 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------------< com.sentinel:auth-service >----------------------
+[INFO] Building auth-service 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.4.0:clean (default-clean) @ auth-service ---
+[INFO] Deleting C:\Users\USUARIO\Downloads\sentinel_v2\sentinel\auth-service-java\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ auth-service ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ auth-service ---
+[INFO] Changes detected - recompiling the module! :source
+[INFO] Compiling 91 source files with javac [debug release 17] to target\classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/USUARIO/Downloads/sentinel_v2/sentinel/auth-service-java/src/main/java/com/sentinel/auth/service/impl/AuthServiceImpl.java:[103,17] illegal start of expression
+[INFO] 1 error
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.018 s
+[INFO] Finished at: 2025-12-17T05:49:30-05:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:compile (default-compile) on project auth-service: Compilation failure
+[ERROR] /C:/Users/USUARIO/Downloads/sentinel_v2/sentinel/auth-service-java/src/main/java/com/sentinel/auth/service/impl/AuthServiceImpl.java:[103,17] illegal start of expression
+[ERROR] 
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

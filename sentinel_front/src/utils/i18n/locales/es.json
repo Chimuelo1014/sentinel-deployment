@@ -1,0 +1,32 @@
+{
+  "nav": {
+    "home": "INICIO",
+    "about": "SOBRE NOSOTROS",
+    "services": "SERVICIOS",
+    "contact": "CONTACTO"
+  },
+  "hero": {
+    "title": "SENTINEL\nAUDITS",
+    "description": "Audaz, seguro y centrado en la conversión. Cada sección motiva al usuario a mirar, interactuar o convertir. Desde la descripción general del servicio hasta la credibilidad del equipo y la ubicación de las llamadas a la acción (CTA), todas las decisiones se basan en el rendimiento.",
+    "cta": "CONSULTORÍA"
+  },
+  "tagline": {
+    "part1": "Convertimos",
+    "highlight1": "suscriptores",
+    "part2": "en",
+    "highlight2": "clientes"
+  },
+  "services": {
+    "title": {
+      "part1": "somos una empresa smm",
+      "highlight": "next-gen",
+      "part2": "lorem imput",
+      "part3":"lorem imput"
+    },
+    "items": {
+      "content": "Creación de\nContenido",
+      "social": "Gestión de\nRedes Sociales",
+      "analytics": "Análisis y\nCrecimiento de Marca",
+      "advertising": "Publicidad\nDirigida"
+    }}
+}

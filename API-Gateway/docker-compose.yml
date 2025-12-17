@@ -1,0 +1,104 @@
+# Kong API Gateway Docker Compose for Sentinel
+# This is a standalone Kong configuration that can be used independently
+# or alongside the main docker-compose.yml
+
+version: '3.8'
+
+services:
+  # Kong Database (PostgreSQL)
+  kong-db:
+    image: postgres:15-alpine
+    container_name: sentinel-kong-db
+    environment:
+      POSTGRES_DB: kong
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong123
+    ports:
+      - "5433:5432"
+    volumes:
+      - kong_db_data:/var/lib/postgresql/data
+    networks:
+      - sentinel-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong -d kong"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Kong Migrations (run once at startup)
+  kong-migrations:
+    image: kong:latest
+    container_name: sentinel-kong-migrations
+    command: kong migrations bootstrap
+    depends_on:
+      kong-db:
+        condition: service_healthy
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong123
+    networks:
+      - sentinel-network
+    restart: on-failure
+
+  # Kong API Gateway
+  kong:
+    image: kong:latest
+    container_name: sentinel-kong
+    depends_on:
+      kong-db:
+        condition: service_healthy
+      kong-migrations:
+        condition: service_completed_successfully
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong123
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_ADMIN_GUI_URL: http://localhost:8002
+      KONG_PROXY_LISTEN: 0.0.0.0:8000, 0.0.0.0:8443 ssl
+    ports:
+      - "8000:8000"    # Kong Proxy (HTTP)
+      - "8443:8443"    # Kong Proxy (HTTPS)
+      - "8001:8001"    # Kong Admin API
+      - "8002:8002"    # Kong Manager GUI
+      - "8444:8444"    # Kong Admin API (HTTPS)
+    volumes:
+      - ./kong.yml:/etc/kong/kong.yml:ro
+    networks:
+      - sentinel-network
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Konga - Kong Admin UI
+  konga:
+    image: pantsel/konga:latest
+    container_name: sentinel-konga
+    environment:
+      NODE_ENV: production
+      TOKEN_SECRET: sentinel_konga_secret_2025
+    ports:
+      - "1337:1337"
+    depends_on:
+      kong:
+        condition: service_healthy
+    networks:
+      - sentinel-network
+
+volumes:
+  kong_db_data:
+    driver: local
+
+networks:
+  sentinel-network:
+    driver: bridge
+    name: sentinel-network

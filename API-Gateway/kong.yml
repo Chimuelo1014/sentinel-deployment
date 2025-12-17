@@ -1,0 +1,290 @@
+# Kong Declarative Configuration for Sentinel Project
+# Use: kong config db_import kong.yml
+
+_format_version: "3.0"
+_transform: true
+
+# =============================================================================
+# SERVICES - All Sentinel Microservices
+# =============================================================================
+
+services:
+  # Backend for Frontend (BFF) - Main entry point for frontend
+  - name: bff-service
+    url: http://backend-for-frontend-service:8080
+    protocol: http
+    tags:
+      - sentinel
+      - bff
+    routes:
+      - name: bff-dashboard
+        paths:
+          - /api/bff/dashboard
+        strip_path: false
+        protocols:
+          - http
+          - https
+      - name: bff-scans
+        paths:
+          - /api/bff/scans
+        strip_path: false
+        protocols:
+          - http
+          - https
+      - name: bff-projects
+        paths:
+          - /api/bff/projects
+        strip_path: false
+        protocols:
+          - http
+          - https
+      - name: bff-analytics
+        paths:
+          - /api/bff/analytics
+        strip_path: false
+        protocols:
+          - http
+          - https
+      - name: bff-users
+        paths:
+          - /api/bff/users
+        strip_path: false
+        protocols:
+          - http
+          - https
+      - name: bff-notifications
+        paths:
+          - /api/bff/notifications
+        strip_path: false
+        protocols:
+          - http
+          - https
+      - name: bff-billing
+        paths:
+          - /api/bff/billing
+          - /api/bff/plans
+          - /api/bff/subscription
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # Auth Service
+  - name: auth-service
+    url: http://auth-service:8081
+    protocol: http
+    tags:
+      - sentinel
+      - auth
+    routes:
+      - name: auth-routes
+        paths:
+          - /api/auth
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # Tenant Service
+  - name: tenant-service
+    url: http://tenant-service:8082
+    protocol: http
+    tags:
+      - sentinel
+      - tenant
+    routes:
+      - name: tenant-routes
+        paths:
+          - /api/tenants
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # Project Service
+  - name: project-service
+    url: http://project-service:8083
+    protocol: http
+    tags:
+      - sentinel
+      - project
+    routes:
+      - name: project-routes
+        paths:
+          - /api/projects
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # Billing Service
+  - name: billing-service
+    url: http://billing-service:8084
+    protocol: http
+    tags:
+      - sentinel
+      - billing
+    routes:
+      - name: billing-routes
+        paths:
+          - /api/billing
+          - /api/plans
+          - /api/subscriptions
+          - /api/payments-history
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # Scaner Orchestrator Service
+  - name: orchestrator-service
+    url: http://scaner-orchestrator-service:8086
+    protocol: http
+    tags:
+      - sentinel
+      - orchestrator
+    routes:
+      - name: orchestrator-routes
+        paths:
+          - /api/scans
+          - /api/orchestrator
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # Results Aggregator Service
+  - name: results-aggregator-service
+    url: http://results-aggregator-service:8087
+    protocol: http
+    tags:
+      - sentinel
+      - results
+    routes:
+      - name: results-routes
+        paths:
+          - /api/results
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # User Management Service
+  - name: user-management-service
+    url: http://user-management-service:8088
+    protocol: http
+    tags:
+      - sentinel
+      - users
+    routes:
+      - name: user-management-routes
+        paths:
+          - /api/users
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # Security Gate Service (C#)
+  - name: security-gate-service
+    url: http://security-gate-service:5001
+    protocol: http
+    tags:
+      - sentinel
+      - security
+    routes:
+      - name: security-gate-routes
+        paths:
+          - /api/security-gate
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # Code Quality Service (C#)
+  - name: code-quality-service
+    url: http://code-quality-service:5001
+    protocol: http
+    tags:
+      - sentinel
+      - quality
+    routes:
+      - name: code-quality-routes
+        paths:
+          - /api/code-quality
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # Vulnerability Service (C#)
+  - name: vulnerability-service
+    url: http://vulnerability-service:5001
+    protocol: http
+    tags:
+      - sentinel
+      - vulnerability
+    routes:
+      - name: vulnerability-routes
+        paths:
+          - /api/vulnerabilities
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+# =============================================================================
+# PLUGINS - Global and Service-specific
+# =============================================================================
+
+plugins:
+  # Global CORS Plugin
+  - name: cors
+    config:
+      origins:
+        - "http://localhost:5173"
+        - "http://localhost:5174"
+        - "http://localhost:3000"
+        - "http://localhost:3001"
+        - "http://localhost:8000"
+      methods:
+        - GET
+        - HEAD
+        - PUT
+        - PATCH
+        - POST
+        - DELETE
+        - OPTIONS
+      headers:
+        - Accept
+        - Accept-Version
+        - Content-Length
+        - Content-MD5
+        - Content-Type
+        - Date
+        - Authorization
+        - X-Auth-Token
+        - X-Tenant-Id
+        - X-Request-ID
+      exposed_headers:
+        - X-Auth-Token
+        - X-Total-Count
+        - X-Request-ID
+      credentials: true
+      max_age: 3600
+      preflight_continue: false
+
+  # Global Rate Limiting
+  - name: rate-limiting
+    config:
+      minute: 1000
+      policy: local
+      fault_tolerant: true
+      hide_client_headers: false
+
+  # Request ID Header
+  - name: correlation-id
+    config:
+      header_name: X-Request-ID
+      generator: uuid
+      echo_downstream: true

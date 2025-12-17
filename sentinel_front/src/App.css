@@ -1,0 +1,35 @@
+@import url('./assets/main.scss');
+
+:root {
+  --color-primary: #FF1B6D;
+  --color-primary-light: #FF4D8D;
+  --color-primary-dark: #CC1558;
+  --color-secondary: #1A1A1A;
+  --color-background: #0A0A0A;
+  --color-surface: #1A1A1A;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #B0B0B0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}

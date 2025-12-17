@@ -1,0 +1,72 @@
+:root {
+  --color-primary: #FF1B6D;
+  --color-primary-light: #FF4D8D;
+  --color-primary-dark: #CC1558;
+  --color-secondary: #1A1A1A;
+  --color-background: #0A0A0A;
+  --color-surface: #1A1A1A;
+  --color-text: #FFFFFF;
+  --color-text-secondary: #B0B0B0;
+  --color-border: #333333;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-50px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes floating {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+
+  
+}
+.footer-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* Push everything to the right */
+}
+
+.footer-link {
+  position: relative;
+  cursor: pointer;
+
+  /* 🔥 Ajusta solo al tamaño del texto */
+  display: inline-flex;
+
+  /* 🔥 Empuja cada item a la derecha */
+  align-self: flex-end;
+}
+
+.footer-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  height: 2px;
+
+  /* 🔥 La línea solo mide lo que mide el texto */
+  width: 100%;
+
+  background: currentColor;
+  transform-origin: right center;
+  transform: scaleX(0);
+  transition: transform 260ms cubic-bezier(.2,.8,.2,1);
+}
+
+.footer-link:hover::after {
+  transform: scaleX(1);
+}
+

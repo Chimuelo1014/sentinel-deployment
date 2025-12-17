@@ -1,0 +1,33 @@
+{
+  "nav": {
+    "home": "HOME",
+    "about": "ABOUT US",
+    "services": "SERVICES",
+    "contact": "CONTACT"
+  },
+  "hero": {
+    "title": "SENTINEL\nAUDITS",
+    "description": "Bold, confident, conversion-focused. Each section pushes the user to look, interact, or convert. From service overview to team credibility and CTA placement — all decisions are built around performance.",
+    "cta": "CONSULTATION"
+  },
+  "tagline": {
+    "part1": "We turn",
+    "highlight1": "subscribers",
+    "part2": "into",
+    "highlight2": "clients"
+  },
+  "services": {
+    "title": {
+      "part1": "we are",
+      "highlight": "next-gen",
+      "part2": "smm company",
+      "part3":"smm company"
+    },
+    "items": {
+      "content": "Content\nCreation",
+      "social": "Social Media\nManagement",
+      "analytics": "Analytics &\nBrand Growth",
+      "advertising": "Targeted\nAdvertising"
+    }
+  }
+}
