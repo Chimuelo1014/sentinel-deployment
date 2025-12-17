@@ -23,20 +23,22 @@ jobs:
 
     - name: 📦 Deploy to VPS
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} <<'EOF'
           set -e
           
-          echo "🛑 Stopping ALL Docker containers..."
-          docker stop $(docker ps -aq) 2>/dev/null || true
+          cd ${{ env.DEPLOY_PATH }}
           
-          echo "🗑️ Removing ALL Docker containers..."
-          docker rm $(docker ps -aq) 2>/dev/null || true
+          echo "🛑 Stopping all services with docker-compose..."
+          docker-compose -f docker-compose.yml --env-file .env.production down -v --remove-orphans 2>/dev/null || true
           
-          echo "🧹 Pruning Docker networks..."
+          echo "🗑️ Force removing ALL containers..."
+          docker rm -f $(docker ps -aq) 2>/dev/null || true
+          
+          echo "🌐 Removing Docker networks..."
+          docker network rm $(docker network ls -q) 2>/dev/null || true
           docker network prune -f || true
           
           echo "🔄 Pulling latest code..."
-          cd ${{ env.DEPLOY_PATH }}
           git fetch origin main
           git reset --hard origin/main
           
@@ -47,7 +49,7 @@ jobs:
           docker-compose -f docker-compose.yml --env-file .env.production up -d
           
           echo "⏳ Waiting for services to start..."
-          sleep 10
+          sleep 15
           
           echo "🧹 Cleaning up unused images..."
           docker image prune -f
