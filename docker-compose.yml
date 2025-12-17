@@ -41,6 +41,16 @@ services:
     networks:
       - sentinel-network
 
+  # MailHog (SMTP Mock)
+  mailhog:
+    image: mailhog/mailhog
+    container_name: sentinel-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - sentinel-network
+
   # RabbitMQ Message Broker
   rabbitmq:
     image: rabbitmq:3-management
@@ -54,12 +64,28 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - sentinel-network
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: sentinel-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - WEBHOOK_URL=http://n8n:5678/
+      - GENERIC_TIMEZONE=America/New_York
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - sentinel-network
+    restart: always
+
 
   # Kong API Gateway
   kong-db:
@@ -152,7 +178,7 @@ services:
       - "8081:8081"
     environment:
       # Database
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_auth
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
       SPRING_DATASOURCE_USERNAME: sentinel
       SPRING_DATASOURCE_PASSWORD: sentinel123
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
@@ -164,8 +190,8 @@ services:
       
       # Service URLs
       SERVICES_TENANT_URL: http://tenant-service:8082
-      SERVICES_BILLING_URL: http://billing-service:8084
-      SERVICES_USER_MGMT_URL: http://user-management-service:8088
+      SERVICES_BILLING_URL: http://sentinel-billing:8084
+      SERVICES_USER_MGMT_URL: http://user-management-service:8083
       
       # JWT
       JWT_SECRET: X9q2N8ZCnO3Tj48p1Fk6B2V0x8Teq9gHBV0SX1e2p6U=
@@ -186,16 +212,16 @@ services:
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: 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
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_REDIRECT_URI: "{baseUrl}/api/auth/oauth2/callback/google"
       
-      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_CLIENT_ID: 3b7c4a0f-81b0-4b6c-945c-ec9504fb30dc
-      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_CLIENT_SECRET: 7b3a56a0-7620-4ff3-b217-c0dc482725b5
-      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_REDIRECT_URI: "{baseUrl}/api/auth/oauth2/callback/microsoft"
-
-      
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_SCOPE: openid,profile,email
+      # Microsoft OAuth2 temporarily disabled - needs custom provider configuration
+      # SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_CLIENT_ID: 3b7c4a0f-81b0-4b6c-945c-ec9504fb30dc
+      # SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_CLIENT_SECRET: 7b3a56a0-7620-4ff3-b217-c0dc482725b5
+      # SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_REDIRECT_URI: "{baseUrl}/api/auth/oauth2/callback/microsoft"
 
 
       
       # Mail (Mock)
-      SPRING_MAIL_HOST: localhost
+      SPRING_MAIL_HOST: mailhog
       SPRING_MAIL_PORT: 1025
       SPRING_MAIL_USERNAME: test
       SPRING_MAIL_PASSWORD: test
@@ -226,6 +252,8 @@ services:
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_USERNAME: sentinel
       SPRING_RABBITMQ_PASSWORD: sentinel123
+      JWT_SECRET: X9q2N8ZCnO3Tj48p1Fk6B2V0x8Teq9gHBV0SX1e2p6U=
+      SERVICES_USER_MGMT_URL: http://user-management-service:8083
     depends_on:
       postgres:
         condition: service_healthy
@@ -309,7 +337,7 @@ services:
       dockerfile: Dockerfile
     container_name: sentinel-user-management
     ports:
-      - "8088:8088"
+      - "8088:8083" # External:Internal (App listens on 8083)
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
       SPRING_DATASOURCE_USERNAME: sentinel
@@ -317,6 +345,7 @@ services:
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_USERNAME: sentinel
       SPRING_RABBITMQ_PASSWORD: sentinel123
+      JWT_SECRET: X9q2N8ZCnO3Tj48p1Fk6B2V0x8Teq9gHBV0SX1e2p6U=
     depends_on:
       postgres:
         condition: service_healthy
@@ -341,6 +370,21 @@ services:
       SPRING_RABBITMQ_USERNAME: sentinel
       SPRING_RABBITMQ_PASSWORD: sentinel123
       SPRING_DATA_MONGODB_URI: mongodb://sentinel:sentinel123@mongodb:27017/sentinel_bff_cache?authSource=admin
+      
+      # Service URLs for proxying (Spring property format for Feign)
+      APP_SERVICES_BILLING-URL: http://sentinel-billing:8084
+      APP_SERVICES_TENANT-URL: http://sentinel-tenant-service:8082
+      APP_SERVICES_PROJECT-URL: http://sentinel-project-service:8083
+      APP_SERVICES_AUTH-URL: http://sentinel-auth-service:8081
+      
+      # Legacy format (if needed)
+      SERVICES_AUTH_URL: http://sentinel-auth-service:8081
+      SERVICES_TENANT_URL: http://sentinel-tenant-service:8082
+      SERVICES_PROJECT_URL: http://sentinel-project-service:8083
+      SERVICES_BILLING_URL: http://sentinel-billing:8084
+      
+      # JWT
+      JWT_SECRET: X9q2N8ZCnO3Tj48p1Fk6B2V0x8Teq9gHBV0SX1e2p6U=
     depends_on:
       postgres:
         condition: service_healthy
@@ -348,12 +392,12 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s
     networks:
       - sentinel-network
 
@@ -373,17 +417,23 @@ services:
       SPRING_RABBITMQ_USERNAME: sentinel
       SPRING_RABBITMQ_PASSWORD: sentinel123
       SERVER_PORT: 8084
+      JWT_SECRET: X9q2N8ZCnO3Tj48p1Fk6B2V0x8Teq9gHBV0SX1e2p6U=
+      LOGGING_LEVEL_COM_SENTINEL_BILLING: DEBUG
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
+      # MercadoPago Sandbox Token
+      MERCADOPAGO_ACCESS_TOKEN: TEST-8162214220028576-121612-f6de21e1e57afe4ee3ca69253d301e31-1045991941
+      APP_URL: http://localhost:3001
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s
     networks:
       - sentinel-network
 
@@ -451,12 +501,32 @@ services:
     networks:
       - sentinel-network
 
+  # Frontend - React + Vite
+  sentinel-front:
+    build:
+      context: ./sentinel_front
+      dockerfile: Dockerfile
+    container_name: sentinel-front
+    ports:
+      - "3001:80"
+    environment:
+      VITE_API_URL: http://localhost:8000
+      VITE_MERCADOPAGO_PUBLIC_KEY: TEST-004d496a-5c22-4217-ae7c-2ba364213038
+    depends_on:
+      - kong
+      - auth-service
+      - backend-for-frontend-service
+    networks:
+      - sentinel-network
+
 volumes:
   postgres_data:
   mongodb_data:
   rabbitmq_data:
   kong_db_data:
+  n8n_data:
 
 networks:
   sentinel-network:
     driver: bridge
+
