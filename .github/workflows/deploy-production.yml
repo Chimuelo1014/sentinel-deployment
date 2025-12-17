@@ -26,8 +26,16 @@ jobs:
         ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
           set -e
           
-          echo "🛑 Stopping all containers to release ports..."
+          echo "🛑 Stopping all containers and releasing ports..."
+          docker stop $(docker ps -aq --filter "name=sentinel") 2>/dev/null || true
+          docker rm $(docker ps -aq --filter "name=sentinel") 2>/dev/null || true
           docker-compose -f docker-compose.yml --env-file .env.production down || true
+          
+          # Verify port 5678 is free
+          if lsof -Pi :5678 -sTCP:LISTEN -t >/dev/null 2>&1 ; then
+            echo "⚠️ Port 5678 still in use, killing process..."
+            kill -9 $(lsof -t -i:5678) 2>/dev/null || true
+          fi
           
           echo "🔄 Pulling latest code..."
           cd ${{ env.DEPLOY_PATH }}
