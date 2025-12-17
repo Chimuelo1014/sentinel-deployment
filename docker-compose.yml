@@ -5,6 +5,7 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: sentinel-postgres
+    command: postgres -c 'shared_buffers=64MB' -c 'max_connections=100'
     environment:
       POSTGRES_USER: sentinel
       POSTGRES_PASSWORD: sentinel123
@@ -18,6 +19,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 300M
     networks:
       - sentinel-network
 
@@ -25,6 +30,7 @@ services:
   mongodb:
     image: mongo:latest
     container_name: sentinel-mongodb
+    command: mongod --wiredTigerCacheSizeGB 0.25 --bind_ip_all
     environment:
       MONGO_INITDB_ROOT_USERNAME: sentinel
       MONGO_INITDB_ROOT_PASSWORD: sentinel123
@@ -38,6 +44,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 350M
     networks:
       - sentinel-network
 
@@ -48,6 +58,10 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
+    deploy:
+        resources:
+            limits:
+                memory: 128M
     networks:
       - sentinel-network
 
@@ -68,6 +82,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 300M
     networks:
       - sentinel-network
 
@@ -82,6 +100,10 @@ services:
       - GENERIC_TIMEZONE=America/New_York
     volumes:
       - n8n_data:/home/node/.n8n
+    deploy:
+        resources:
+            limits:
+                memory: 512M
     networks:
       - sentinel-network
     restart: always
@@ -91,6 +113,7 @@ services:
   kong-db:
     image: postgres:15-alpine
     container_name: sentinel-kong-db
+    command: postgres -c 'shared_buffers=64MB' -c 'max_connections=100'
     environment:
       POSTGRES_USER: kong
       POSTGRES_PASSWORD: kong123
@@ -104,6 +127,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 300M
     networks:
       - sentinel-network
 
@@ -119,6 +146,10 @@ services:
     depends_on:
       kong-db:
         condition: service_healthy
+    deploy:
+        resources:
+            limits:
+                memory: 256M
     networks:
       - sentinel-network
 
@@ -145,6 +176,10 @@ services:
     depends_on:
       kong-migration:
         condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          memory: 400M
     networks:
       - sentinel-network
 
@@ -163,6 +198,10 @@ services:
     depends_on:
       kong-db:
         condition: service_healthy
+    deploy:
+        resources:
+            limits:
+                memory: 300M
     networks:
       - sentinel-network
 
@@ -177,6 +216,7 @@ services:
     ports:
       - "8081:8081"
     environment:
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
       # Database
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
       SPRING_DATASOURCE_USERNAME: sentinel
@@ -205,20 +245,14 @@ services:
       AUTH_EVENTS_USER_LOGIN_ROUTING_KEY: auth.user.login
       
       # CORS
-      APP_CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001,http://localhost:5173,http://localhost:5174,http://localhost:8000
+      APP_CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001,http://localhost:5173,http://localhost:5174,https://sentinel.crudzaso.com
       
       # OAuth2 Client Registration (Force Injection)
-      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID: 103393455556-3s3q2gd8mngmvcuphfidn26si6n6mlc8.apps.googleusercontent.com
-      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: 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
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_REDIRECT_URI: "{baseUrl}/api/auth/oauth2/callback/google"
       
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_SCOPE: openid,profile,email
-      # Microsoft OAuth2 temporarily disabled - needs custom provider configuration
-      # SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_CLIENT_ID: 3b7c4a0f-81b0-4b6c-945c-ec9504fb30dc
-      # SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_CLIENT_SECRET: 7b3a56a0-7620-4ff3-b217-c0dc482725b5
-      # SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_REDIRECT_URI: "{baseUrl}/api/auth/oauth2/callback/microsoft"
-
-
       
       # Mail (Mock)
       SPRING_MAIL_HOST: mailhog
@@ -228,13 +262,15 @@ services:
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
       SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
       
-
-
     depends_on:
       postgres:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 350M
     networks:
       - sentinel-network
 
@@ -246,6 +282,7 @@ services:
     ports:
       - "8082:8082"
     environment:
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
       SPRING_DATASOURCE_USERNAME: sentinel
       SPRING_DATASOURCE_PASSWORD: sentinel123
@@ -259,6 +296,10 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 320M
     networks:
       - sentinel-network
 
@@ -270,6 +311,7 @@ services:
     ports:
       - "8083:8083"
     environment:
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
       SPRING_DATASOURCE_USERNAME: sentinel
       SPRING_DATASOURCE_PASSWORD: sentinel123
@@ -281,6 +323,10 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 320M
     networks:
       - sentinel-network
 
@@ -292,6 +338,7 @@ services:
     ports:
       - "8086:8086"
     environment:
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
       SPRING_DATASOURCE_USERNAME: sentinel
       SPRING_DATASOURCE_PASSWORD: sentinel123
@@ -303,6 +350,10 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 350M
     networks:
       - sentinel-network
 
@@ -314,6 +365,7 @@ services:
     ports:
       - "8087:8087"
     environment:
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
       SPRING_DATASOURCE_USERNAME: sentinel
       SPRING_DATASOURCE_PASSWORD: sentinel123
@@ -328,6 +380,10 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 350M
     networks:
       - sentinel-network
 
@@ -339,6 +395,7 @@ services:
     ports:
       - "8088:8083" # External:Internal (App listens on 8083)
     environment:
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
       SPRING_DATASOURCE_USERNAME: sentinel
       SPRING_DATASOURCE_PASSWORD: sentinel123
@@ -351,6 +408,10 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 320M
     networks:
       - sentinel-network
 
@@ -362,6 +423,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
       SPRING_DATASOURCE_USERNAME: sentinel
@@ -371,13 +433,13 @@ services:
       SPRING_RABBITMQ_PASSWORD: sentinel123
       SPRING_DATA_MONGODB_URI: mongodb://sentinel:sentinel123@mongodb:27017/sentinel_bff_cache?authSource=admin
       
-      # Service URLs for proxying (Spring property format for Feign)
+      # Service URLs
       APP_SERVICES_BILLING-URL: http://sentinel-billing:8084
       APP_SERVICES_TENANT-URL: http://sentinel-tenant-service:8082
       APP_SERVICES_PROJECT-URL: http://sentinel-project-service:8083
       APP_SERVICES_AUTH-URL: http://sentinel-auth-service:8081
       
-      # Legacy format (if needed)
+      # Legacy
       SERVICES_AUTH_URL: http://sentinel-auth-service:8081
       SERVICES_TENANT_URL: http://sentinel-tenant-service:8082
       SERVICES_PROJECT_URL: http://sentinel-project-service:8083
@@ -392,12 +454,10 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    # healthcheck:
-    #   test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 3
-    #   start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 350M
     networks:
       - sentinel-network
 
@@ -409,6 +469,7 @@ services:
     ports:
       - "8084:8084"
     environment:
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx256m"
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sentinel_db
       SPRING_DATASOURCE_USERNAME: sentinel
@@ -428,12 +489,10 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-    # healthcheck:
-    #   test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 3
-    #   start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 300M
     networks:
       - sentinel-network
 
@@ -456,6 +515,10 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 200M
     networks:
       - sentinel-network
 
@@ -477,6 +540,10 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    deploy:
+        resources:
+            limits:
+                memory: 200M
     networks:
       - sentinel-network
 
@@ -498,6 +565,10 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    deploy:
+        resources:
+            limits:
+                memory: 200M
     networks:
       - sentinel-network
 
@@ -510,12 +581,16 @@ services:
     ports:
       - "3001:80"
     environment:
-      VITE_API_URL: http://localhost:8000
+      VITE_API_URL: https://service.sentinel.crudzaso.com
       VITE_MERCADOPAGO_PUBLIC_KEY: TEST-004d496a-5c22-4217-ae7c-2ba364213038
     depends_on:
       - kong
       - auth-service
       - backend-for-frontend-service
+    deploy:
+      resources:
+        limits:
+          memory: 150M
     networks:
       - sentinel-network
 
@@ -529,4 +604,3 @@ volumes:
 networks:
   sentinel-network:
     driver: bridge
-

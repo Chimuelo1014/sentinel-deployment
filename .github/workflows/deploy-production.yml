@@ -6,7 +6,7 @@ on:
   workflow_dispatch:  # Allow manual trigger
 
 env:
-  DEPLOY_PATH: /home/sentinel/sentinel-deployment
+  DEPLOY_PATH: /home/samuel/sentinel-deployment
 
 jobs:
   deploy:
