@@ -1,33 +1,34 @@
 {
   "nav": {
     "home": "HOME",
-    "about": "ABOUT US",
-    "services": "SERVICES",
+    "about": "ABOUT SENTINEL",
+    "services": "SOLUTIONS",
     "contact": "CONTACT"
   },
   "hero": {
-    "title": "SENTINEL\nAUDITS",
-    "description": "Bold, confident, conversion-focused. Each section pushes the user to look, interact, or convert. From service overview to team credibility and CTA placement — all decisions are built around performance.",
-    "cta": "CONSULTATION"
+    "title": "SENTINEL\nSECURITY",
+    "description": "Sentinel provides continuous security scanning and risk visibility across your applications and infrastructure. Detect vulnerabilities early, prioritize real threats, and strengthen your security posture with confidence.",
+    "cta": "REQUEST A DEMO"
   },
   "tagline": {
     "part1": "We turn",
-    "highlight1": "subscribers",
+    "highlight1": "exposure",
     "part2": "into",
-    "highlight2": "clients"
+    "highlight2": "control"
   },
   "services": {
     "title": {
-      "part1": "we are",
+      "part1": "we deliver",
       "highlight": "next-gen",
-      "part2": "smm company",
-      "part3":"smm company"
+      "part2": "security",
+      "part3": "solutions"
     },
     "items": {
-      "content": "Content\nCreation",
-      "social": "Social Media\nManagement",
-      "analytics": "Analytics &\nBrand Growth",
-      "advertising": "Targeted\nAdvertising"
+      "content": "Application\nSecurity\nScanning",
+      "social": "Infrastructure\nRisk\nMonitoring",
+      "analytics": "Threat\nAnalysis &\nCompliance",
+      "advertising": "Continuous\nSecurity\nAudits"
     }
   }
 }
+
