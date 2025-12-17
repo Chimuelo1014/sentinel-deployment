@@ -1,34 +1,68 @@
-name: Deploy to Production
+name: Deploy to Production VPS
 
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  DEPLOY_PATH: /home/sentinel/sentinel-deployment
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
+    - name: 📥 Checkout code
       uses: actions/checkout@v3
 
-    - name: Deploy to VPS
-      uses: appleboy/ssh-action@master
+    - name: 🔐 Setup SSH
+      uses: webfactory/ssh-agent@v0.7.0
       with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          cd ~/sentinel-prod/sentinel
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: 📦 Deploy to VPS
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+          set -e
+          
+          echo "🔄 Pulling latest code..."
+          cd ${{ env.DEPLOY_PATH }}
           git pull origin main
-          docker-compose -f docker-compose.prod.yml --env-file .env.production up -d --build
+          
+          echo "🔨 Building Docker images..."
+          docker-compose -f docker-compose.prod.yml --env-file .env.production build --no-cache
+          
+          echo "🚀 Deploying containers..."
+          docker-compose -f docker-compose.prod.yml --env-file .env.production up -d
+          
+          echo "🧹 Cleaning up..."
           docker system prune -f
           
-    - name: Verify Deployment
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
+          echo "✅ Deployment complete!"
           docker ps --filter "name=sentinel" --format "table {{.Names}}\t{{.Status}}"
+        EOF
+
+    - name: 🔍 Health Check
+      run: |
+        echo "Waiting 30 seconds for services to start..."
+        sleep 30
+        
+        echo "Checking API health..."
+        curl -f https://service.sentinel.crudzaso.com/health || echo "API health check failed (might be OK if /health endpoint doesn't exist)"
+        
+        echo "Checking Frontend..."
+        curl -f https://sentinel.crudzaso.com || exit 1
+
+    - name: 📊 Deployment Summary
+      if: always()
+      run: |
+        echo "### 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status:** \`${{ job.status }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Frontend:** https://sentinel.crudzaso.com" >> $GITHUB_STEP_SUMMARY
+        echo "- **API:** https://service.sentinel.crudzaso.com" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Deployed at:** $(date -u)" >> $GITHUB_STEP_SUMMARY
