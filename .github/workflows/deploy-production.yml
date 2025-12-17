@@ -26,6 +26,9 @@ jobs:
         ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
           set -e
           
+          echo "🛑 Stopping all containers to release ports..."
+          docker-compose -f docker-compose.yml --env-file .env.production down || true
+          
           echo "🔄 Pulling latest code..."
           cd ${{ env.DEPLOY_PATH }}
           git fetch origin main

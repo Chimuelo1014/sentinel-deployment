@@ -223,6 +223,10 @@ services:
       SPRING_DATASOURCE_PASSWORD: sentinel123
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       
+      # Proxy & Headers
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+      SERVER_TOMCAT_REMOTEIP_INTERNAL_PROXIES: .*
+      
       # RabbitMQ
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_USERNAME: sentinel
@@ -231,13 +235,11 @@ services:
       # Service URLs
       SERVICES_TENANT_URL: http://tenant-service:8082
       SERVICES_BILLING_URL: http://sentinel-billing:8084
-      SERVICES_USER_MGMT_URL: http://user-management-service:8083
+      SERVICES_PROJECT_URL: http://project-service:8083
       
       # JWT
       JWT_SECRET: X9q2N8ZCnO3Tj48p1Fk6B2V0x8Teq9gHBV0SX1e2p6U=
-      JWT_EXPIRATION: 3600000
-      JWT_REFRESH_EXPIRATION: 2592000000
-      SERVER_FORWARD_HEADERS_STRATEGY: framework
+      JWT_EXPIRATION_MS: 86400000
       
       # Auth Events
       AUTH_EVENTS_EXCHANGE: auth-exchange
@@ -577,12 +579,15 @@ services:
     build:
       context: ./sentinel_front
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: https://service.sentinel.crudzaso.com
+        VITE_MERCADOPAGO_PUBLIC_KEY: ${VITE_MERCADOPAGO_PUBLIC_KEY}
     container_name: sentinel-front
     ports:
       - "3001:80"
     environment:
       VITE_API_URL: https://service.sentinel.crudzaso.com
-      VITE_MERCADOPAGO_PUBLIC_KEY: TEST-004d496a-5c22-4217-ae7c-2ba364213038
+      VITE_MERCADOPAGO_PUBLIC_KEY: ${VITE_MERCADOPAGO_PUBLIC_KEY}
     depends_on:
       - kong
       - auth-service
