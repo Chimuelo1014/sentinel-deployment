@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@EnableFeignClients
+@EnableFeignClients(basePackages = "com.sentinel.auth.client")
 @EnableScheduling
 @EnableAsync
 @org.springframework.context.annotation.ComponentScan(basePackages = "com.sentinel.auth")
