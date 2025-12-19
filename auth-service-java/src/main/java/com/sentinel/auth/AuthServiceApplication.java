@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @EnableAsync
 @org.springframework.context.annotation.ComponentScan(basePackages = "com.sentinel.auth")
+@org.springframework.web.servlet.config.annotation.EnableWebMvc // ✅ Force Spring MVC
 public class AuthServiceApplication {
 
     public static void main(String[] args) {
