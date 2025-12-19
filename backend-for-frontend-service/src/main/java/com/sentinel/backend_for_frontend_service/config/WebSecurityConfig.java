@@ -21,60 +21,65 @@ import java.util.List;
 @EnableWebSecurity
 public class WebSecurityConfig {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
-                        .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/api/bff/**").permitAll() // BFF endpoints - JWT validated by Kong
-                        .anyRequest().permitAll());
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                // CORS disabled - handled by Kong API Gateway to avoid duplicate headers
+                                .cors(cors -> cors.disable())
+                                .csrf(csrf -> csrf.disable())
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authorizeHttpRequests(auth -> auth
+                                                // Public endpoints
+                                                .requestMatchers("/actuator/**").permitAll()
+                                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
+                                                                "/v3/api-docs/**")
+                                                .permitAll()
+                                                .requestMatchers("/api/bff/**").permitAll() // BFF endpoints - JWT
+                                                                                            // validated by Kong
+                                                .anyRequest().permitAll());
 
-        return http.build();
-    }
+                return http.build();
+        }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allow all origins for development (configure specific origins for production)
-        configuration.setAllowedOriginPatterns(List.of("*"));
+                // Allow all origins for development (configure specific origins for production)
+                configuration.setAllowedOriginPatterns(List.of("*"));
 
-        // Allowed HTTP methods
-        configuration.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
+                // Allowed HTTP methods
+                configuration.setAllowedMethods(Arrays.asList(
+                                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
 
-        // Allowed headers
-        configuration.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type",
-                "Accept",
-                "Origin",
-                "X-Requested-With",
-                "X-Tenant-Id",
-                "X-Request-ID",
-                "Cache-Control"));
+                // Allowed headers
+                configuration.setAllowedHeaders(Arrays.asList(
+                                "Authorization",
+                                "Content-Type",
+                                "Accept",
+                                "Origin",
+                                "X-Requested-With",
+                                "X-Tenant-Id",
+                                "X-Request-ID",
+                                "Cache-Control"));
 
-        // Exposed headers (visible to frontend)
-        configuration.setExposedHeaders(Arrays.asList(
-                "Authorization",
-                "X-Total-Count",
-                "X-Request-ID",
-                "Content-Disposition"));
+                // Exposed headers (visible to frontend)
+                configuration.setExposedHeaders(Arrays.asList(
+                                "Authorization",
+                                "X-Total-Count",
+                                "X-Request-ID",
+                                "Content-Disposition"));
 
-        // Allow credentials (cookies, authorization headers)
-        configuration.setAllowCredentials(true);
+                // Allow credentials (cookies, authorization headers)
+                configuration.setAllowCredentials(true);
 
-        // Cache preflight response for 1 hour
-        configuration.setMaxAge(3600L);
+                // Cache preflight response for 1 hour
+                configuration.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", configuration);
 
-        return source;
-    }
+                return source;
+        }
 }
