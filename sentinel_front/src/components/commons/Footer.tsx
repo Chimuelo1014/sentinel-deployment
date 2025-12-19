@@ -114,10 +114,33 @@ export default function Footer() {
           {/* Links (col derecha) */}
           <div className="column is-3 has-text-right" >
             <ul className="footer-column" style={{ fontSize: "1.2rem", lineHeight: "2rem" }}>
-              <li className="is-clickable footer-link"  >Documentation</li>
-              <li className="is-clickable footer-link" >About us</li>
-              <li className="is-clickable footer-link" >Contact</li>
-            </ul>
+  <li>
+    <a
+      href="https://docs.laziness.crudzaso.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="footer-link"
+      style={{ textDecoration: "none", color: theme.colors.text.primary }}
+    >
+      Documentation
+    </a>
+  </li>
+
+  <li>
+    <a
+      href="https://docs.laziness.crudzaso.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="footer-link"
+      style={{ textDecoration: "none", color: theme.colors.text.primary }}
+    >
+      About us
+    </a>
+  </li>
+
+  <li className="is-clickable footer-link">Contact</li>
+</ul>
+
           </div>
 
         </div>

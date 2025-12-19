@@ -69,7 +69,7 @@ export const Navbar = () => {
           {t("nav.services")}
         </Link>
         <a
-          href="#"
+           href="https://docs.laziness.crudzaso.com"
           style={{
             color: theme.colors.text.secondary,
             textDecoration: "none",
