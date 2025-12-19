@@ -56,10 +56,18 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         String path = request.getRequestURI();
+        String method = request.getMethod();
 
-        if (isProtectedPath(path) && "POST".equalsIgnoreCase(request.getMethod())) {
+        // Skip rate limiting for HEAD, GET, OPTIONS requests
+        if (method != null && !method.equalsIgnoreCase("POST")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        if (isProtectedPath(path) && "POST".equalsIgnoreCase(method)) {
             String ip = extractClientIp(request);
             String key = ip + ":" + path;
             TokenBucket bucket = isLoginPath(path)
@@ -68,7 +76,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
             if (!bucket.tryConsume(1)) {
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-                response.getWriter().write("Too many requests");
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"Too many requests\"}");
                 return;
             }
         }
@@ -77,7 +86,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     }
 
     private boolean isProtectedPath(String path) {
-        return path.startsWith("/api/auth/login") || path.startsWith("/api/auth/register") || path.startsWith("/api/auth/refresh") || path.startsWith("/oauth2");
+        return path.startsWith("/api/auth/login") || path.startsWith("/api/auth/register")
+                || path.startsWith("/api/auth/refresh") || path.startsWith("/oauth2");
     }
 
     private boolean isLoginPath(String path) {
@@ -86,7 +96,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private String extractClientIp(HttpServletRequest req) {
         String xff = req.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isEmpty()) return xff.split(",")[0].trim();
+        if (xff != null && !xff.isEmpty())
+            return xff.split(",")[0].trim();
         String ip = req.getRemoteAddr();
         return ip == null ? "unknown" : ip;
     }
