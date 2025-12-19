@@ -252,6 +252,9 @@ services:
       # JWT
       JWT_SECRET: X9q2N8ZCnO3Tj48p1Fk6B2V0x8Teq9gHBV0SX1e2p6U=
       JWT_EXPIRATION_MS: 86400000
+      # Spring Boot property mappings (lowercase with dots)
+      jwt.secret: X9q2N8ZCnO3Tj48p1Fk6B2V0x8Teq9gHBV0SX1e2p6U=
+      jwt.expiration: "3600000"
       
       # Auth Events
       AUTH_EVENTS_EXCHANGE: auth-exchange
