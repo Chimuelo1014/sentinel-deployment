@@ -29,7 +29,7 @@ jobs:
           cd ${{ env.DEPLOY_PATH }}
           
           echo "🛑 Stopping all services..."
-          docker-compose -f docker-compose.yml --env-file .env.production down -v --remove-orphans 2>/dev/null || true
+          docker-compose -f docker-compose.yml --env-file .env.production down --remove-orphans 2>/dev/null || true
           
           echo "🗑️ Force removing sentinel containers..."
           docker ps -a --filter "name=sentinel" -q | xargs -r docker rm -f 2>/dev/null || true
