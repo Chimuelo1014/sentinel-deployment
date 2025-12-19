@@ -39,7 +39,8 @@ public class SecurityConfig {
 
                 http
                                 .csrf(csrf -> csrf.disable())
-                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                // CORS disabled - handled by Kong API Gateway to avoid duplicate headers
+                                .cors(cors -> cors.disable())
 
                                 .authorizeHttpRequests(auth -> auth
                                                 // Public endpoints
