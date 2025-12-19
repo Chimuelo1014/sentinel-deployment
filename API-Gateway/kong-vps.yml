@@ -1,0 +1,240 @@
+# Kong Declarative Configuration for Sentinel VPS Deployment
+# Optimizado para docker-compose.vps.yml (sin servicios de escaneo)
+# Modo DB-less
+
+_format_version: "3.0"
+_transform: true
+
+# =============================================================================
+# SERVICES - Solo servicios esenciales para VPS
+# =============================================================================
+
+services:
+  # Backend for Frontend (BFF) - Main entry point
+  - name: bff-service
+    url: http://sentinel-bff-service:8080
+    protocol: http
+    tags:
+      - sentinel
+      - bff
+    routes:
+      - name: bff-dashboard
+        paths:
+          - /api/bff/dashboard
+        strip_path: false
+        protocols:
+          - http
+          - https
+      - name: bff-scans
+        paths:
+          - /api/bff/scans
+        strip_path: false
+        protocols:
+          - http
+          - https
+      - name: bff-projects
+        paths:
+          - /api/bff/projects
+        strip_path: false
+        protocols:
+          - http
+          - https
+      - name: bff-analytics
+        paths:
+          - /api/bff/analytics
+        strip_path: false
+        protocols:
+          - http
+          - https
+      - name: bff-users
+        paths:
+          - /api/bff/users
+        strip_path: false
+        protocols:
+          - http
+          - https
+      - name: bff-notifications
+        paths:
+          - /api/bff/notifications
+        strip_path: false
+        protocols:
+          - http
+          - https
+      - name: bff-billing
+        paths:
+          - /api/bff/billing
+          - /api/bff/plans
+          - /api/bff/subscription
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # Auth Service
+  - name: auth-service
+    url: http://sentinel-auth-service:8081
+    protocol: http
+    tags:
+      - sentinel
+      - auth
+    routes:
+      - name: auth-routes
+        paths:
+          - /api/auth
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # Tenant Service
+  - name: tenant-service
+    url: http://sentinel-tenant-service:8082
+    protocol: http
+    tags:
+      - sentinel
+      - tenant
+    routes:
+      - name: tenant-routes
+        paths:
+          - /api/tenants
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # Project Service
+  - name: project-service
+    url: http://sentinel-project-service:8083
+    protocol: http
+    tags:
+      - sentinel
+      - project
+    routes:
+      - name: project-routes
+        paths:
+          - /api/projects
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # Billing Service (internal endpoints and webhooks only)
+  - name: billing-service-internal
+    url: http://sentinel-billing:8084
+    protocol: http
+    tags:
+      - sentinel
+      - billing
+    routes:
+      - name: billing-internal-routes
+        paths:
+          - /api/billing/webhook
+          - /api/billing/internal
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # Billing via BFF (all user-facing billing endpoints)
+  - name: billing-via-bff
+    url: http://sentinel-bff-service:8080
+    protocol: http
+    tags:
+      - sentinel
+      - billing
+      - bff
+    routes:
+      - name: billing-user-routes
+        paths:
+          - /api/billing
+          - /api/subscriptions
+          - /api/payments-history
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  # User Management Service
+  - name: user-management-service
+    url: http://sentinel-user-management:8083
+    protocol: http
+    tags:
+      - sentinel
+      - users
+    routes:
+      - name: user-management-routes
+        paths:
+          - /api/users
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+
+  # Dashboard service (via BFF)
+  - name: dashboard-service
+    url: http://sentinel-bff-service:8080
+    protocol: http
+    tags:
+      - sentinel
+      - dashboard
+    routes:
+      - name: dashboard-routes
+        paths:
+          - /api/dashboard
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+
+# =============================================================================
+# PLUGINS - Global
+# =============================================================================
+
+plugins:
+  # Global CORS Plugin
+  - name: cors
+    config:
+      origins:
+        - "http://localhost:5173"
+        - "http://localhost:5174"
+        - "http://localhost:3000"
+        - "http://localhost:3001"
+        - "http://localhost:8000"
+        - "https://sentinel.crudzaso.com"
+        - "https://service.sentinel.crudzaso.com"
+      methods:
+        - GET
+        - HEAD
+        - PUT
+        - PATCH
+        - POST
+        - DELETE
+        - OPTIONS
+      headers:
+        - Accept
+        - Accept-Version
+        - Content-Length
+        - Content-MD5
+        - Content-Type
+        - Date
+        - Authorization
+        - X-Auth-Token
+        - X-Tenant-Id
+        - X-Request-ID
+      exposed_headers:
+        - X-Auth-Token
+        - X-Total-Count
+        - X-Request-ID
+      credentials: true
+      max_age: 3600
+      preflight_continue: false
+
+  # Rate Limiting (más permisivo para VPS)
+  - name: rate-limiting
+    config:
+      minute: 500
+      policy: local
+      fault_tolerant: true
+      hide_client_headers: false
