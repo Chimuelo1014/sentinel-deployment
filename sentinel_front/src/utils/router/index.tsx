@@ -12,11 +12,13 @@ import FindingsPage from "../../ui/pages/FindingPanel";
 import SettingsPage from "../../ui/pages/SettingsPage";
 import BillingPage from "../../ui/pages/BillingPage";
 import MockCheckoutPage from "../../ui/pages/MockCheckoutPage";
+import NotFoundPage from "../../ui/pages/NotFoundPage";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <AppContent />, // Layout principal (Sidebar + Header + Outlet)
+    errorElement: <NotFoundPage />, // Error boundary
     children: [
       { index: true, element: <HomePage /> },
       { path: "auth", element: <AuthPage /> },
@@ -31,6 +33,9 @@ export const router = createBrowserRouter([
       { path: "billing", element: <BillingPage /> },
       { path: "billing/mock-checkout", element: <MockCheckoutPage /> },
       { path: "settings", element: <SettingsPage /> },
+
+      // Catch-all 404
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ]);

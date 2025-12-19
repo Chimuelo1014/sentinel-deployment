@@ -1,0 +1,12 @@
+# Global logging configuration for all services
+# Add this to EVERY service in docker-compose.yml
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "1m"
+    max-file: "1"
+
+# For services that don't need logs at all, use:
+x-no-logging: &no-logging
+  driver: "none"
