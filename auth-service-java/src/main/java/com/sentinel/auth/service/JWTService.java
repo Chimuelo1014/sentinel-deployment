@@ -1,11 +1,14 @@
 package com.sentinel.auth.service;
 
+import com.sentinel.auth.client.UserManagementClient;
 import com.sentinel.auth.entity.UserEntity;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -20,10 +23,14 @@ import java.util.function.Function;
 /**
  * Service responsible for generating and validating JWT tokens.
  * 
- * ✅ FIX: Ahora incluye userId en los claims del token
+ * ✅ FIX: Consulta plan real desde user_plans table
  */
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class JWTService {
+
+    private final UserManagementClient userManagementClient;
 
     @Value("${jwt.secret}")
     private String secretKey;
@@ -33,7 +40,7 @@ public class JWTService {
 
     /**
      * Generates a JWT token for the provided user.
-     * ✅ Incluye userId en los claims
+     * ✅ Consulta plan real desde user_plans table
      */
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> extraClaims = new HashMap<>();
@@ -44,7 +51,12 @@ public class JWTService {
             extraClaims.put("userId", user.getId().toString());
             extraClaims.put("email", user.getEmail());
             extraClaims.put("globalRole", user.getGlobalRole().name());
-            extraClaims.put("plan", user.getPlan().name()); // <--- NUEVO
+
+            // ✅ NUEVO: Consultar plan real desde user_plans table
+            String actualPlan = getUserPlanFromDatabase(user.getId());
+            extraClaims.put("plan", actualPlan);
+
+            log.debug("Generated token for user {} with plan: {}", user.getId(), actualPlan);
 
             if (user.getTenantId() != null) {
                 extraClaims.put("tenantId", user.getTenantId().toString());
@@ -52,6 +64,20 @@ public class JWTService {
         }
 
         return generateToken(extraClaims, userDetails);
+    }
+
+    /**
+     * ✅ NUEVO: Consulta el plan real del usuario desde user_plans table
+     */
+    private String getUserPlanFromDatabase(UUID userId) {
+        try {
+            UserManagementClient.UserPlanResponse userPlan = userManagementClient.getUserPlan(userId);
+            return userPlan.plan();
+        } catch (Exception e) {
+            log.warn("Failed to fetch user plan for userId: {}. Using FREE as fallback. Error: {}",
+                    userId, e.getMessage());
+            return "FREE"; // Fallback si no existe plan o hay error
+        }
     }
 
     /**

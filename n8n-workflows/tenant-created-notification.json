@@ -1,0 +1,115 @@
+{
+    "name": "Tenant Created Notification",
+    "nodes": [
+        {
+            "parameters": {
+                "queue": "n8n-tenant-events-queue",
+                "options": {
+                    "durable": true
+                }
+            },
+            "name": "RabbitMQ Trigger",
+            "type": "n8n-nodes-base.rabbitmqTrigger",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "credentials": {
+                "rabbitmq": {
+                    "id": "1",
+                    "name": "RabbitMQ Sentinel"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "functionCode": "// Extraer datos del evento de tenant creado\nconst event = items[0].json;\n\nreturn [\n  {\n    json: {\n      tenantId: event.tenantId,\n      tenantName: event.name,\n      ownerEmail: event.ownerEmail,\n      ownerId: event.ownerId,\n      plan: event.plan || 'FREE',\n      timestamp: event.timestamp || new Date().toISOString()\n    }\n  }\n];"
+            },
+            "name": "Extract Tenant Data",
+            "type": "n8n-nodes-base.function",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "fromEmail": "noreply@sentinel.crudzaso.com",
+                "toEmail": "={{$json.ownerEmail}}",
+                "subject": "🎉 Workspace \"{{$json.tenantName}}\" creado exitosamente",
+                "emailType": "html",
+                "message": "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 600px; margin: 0 auto; padding: 20px; }\n    .header { background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }\n    .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }\n    .workspace-card { background: white; border: 2px solid #ec4899; border-radius: 8px; padding: 20px; margin: 20px 0; }\n    .button { display: inline-block; padding: 12px 30px; background: #ec4899; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }\n    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>🛡️ Sentinel Security</h1>\n    </div>\n    <div class=\"content\">\n      <h2>¡Workspace Creado! 🎉</h2>\n      \n      <div class=\"workspace-card\">\n        <h3>📁 {{$json.tenantName}}</h3>\n        <p><strong>Plan:</strong> {{$json.plan}}</p>\n        <p><strong>ID:</strong> {{$json.tenantId}}</p>\n        <p><strong>Creado:</strong> {{$json.timestamp}}</p>\n      </div>\n      \n      <p>Tu workspace ha sido creado exitosamente y está listo para usar.</p>\n      \n      <p><strong>Próximos pasos:</strong></p>\n      <ol>\n        <li>Crea tu primer proyecto</li>\n        <li>Configura tu repositorio</li>\n        <li>Ejecuta tu primer scan de seguridad</li>\n      </ol>\n      \n      <a href=\"https://sentinel.crudzaso.com/workspaces/{{$json.tenantId}}\" class=\"button\">\n        Ir a mi Workspace\n      </a>\n    </div>\n    <div class=\"footer\">\n      <p>© 2025 Sentinel Security. Todos los derechos reservados.</p>\n    </div>\n  </div>\n</body>\n</html>"
+            },
+            "name": "Send Notification Email",
+            "type": "n8n-nodes-base.emailSend",
+            "typeVersion": 2,
+            "position": [
+                650,
+                300
+            ],
+            "credentials": {
+                "smtp": {
+                    "id": "2",
+                    "name": "SMTP Sentinel"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "functionCode": "// Log del resultado\nconst success = items[0].json;\n\nconsole.log('✅ Notificación enviada');\nconsole.log('📁 Workspace:', success.tenantName);\nconsole.log('👤 Owner:', success.ownerEmail);\nconsole.log('📊 Plan:', success.plan);\n\nreturn items;"
+            },
+            "name": "Log Success",
+            "type": "n8n-nodes-base.function",
+            "typeVersion": 1,
+            "position": [
+                850,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "RabbitMQ Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Extract Tenant Data",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Extract Tenant Data": {
+            "main": [
+                [
+                    {
+                        "node": "Send Notification Email",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Send Notification Email": {
+            "main": [
+                [
+                    {
+                        "node": "Log Success",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": true,
+    "settings": {},
+    "versionId": "1",
+    "id": "2",
+    "meta": {
+        "instanceId": "sentinel-n8n"
+    },
+    "tags": []
+}

@@ -1,0 +1,115 @@
+{
+    "name": "Payment Success Notification",
+    "nodes": [
+        {
+            "parameters": {
+                "queue": "n8n-billing-events-queue",
+                "options": {
+                    "durable": true
+                }
+            },
+            "name": "RabbitMQ Trigger",
+            "type": "n8n-nodes-base.rabbitmqTrigger",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "credentials": {
+                "rabbitmq": {
+                    "id": "1",
+                    "name": "RabbitMQ Sentinel"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "functionCode": "// Extraer datos del evento de pago exitoso\nconst event = items[0].json;\n\nreturn [\n  {\n    json: {\n      paymentId: event.paymentId,\n      userEmail: event.userEmail,\n      amount: event.amount,\n      currency: event.currency || 'USD',\n      planName: event.planName,\n      subscriptionId: event.subscriptionId,\n      timestamp: event.timestamp || new Date().toISOString(),\n      receiptUrl: event.receiptUrl || '#'\n    }\n  }\n];"
+            },
+            "name": "Extract Payment Data",
+            "type": "n8n-nodes-base.function",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "fromEmail": "billing@sentinel.crudzaso.com",
+                "toEmail": "={{$json.userEmail}}",
+                "subject": "✅ Pago Recibido - Recibo #{{$json.paymentId}}",
+                "emailType": "html",
+                "message": "<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 600px; margin: 0 auto; padding: 20px; }\n    .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }\n    .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }\n    .receipt { background: white; border: 2px solid #10b981; border-radius: 8px; padding: 20px; margin: 20px 0; }\n    .amount { font-size: 36px; font-weight: bold; color: #10b981; text-align: center; margin: 20px 0; }\n    .button { display: inline-block; padding: 12px 30px; background: #10b981; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }\n    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }\n    table { width: 100%; border-collapse: collapse; }\n    td { padding: 10px; border-bottom: 1px solid #e5e7eb; }\n    td:first-child { font-weight: bold; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>✅ Pago Exitoso</h1>\n    </div>\n    <div class=\"content\">\n      <h2>¡Gracias por tu pago!</h2>\n      \n      <div class=\"receipt\">\n        <h3 style=\"text-align: center; margin-top: 0;\">Recibo de Pago</h3>\n        \n        <div class=\"amount\">\n          ${{$json.amount}} {{$json.currency}}\n        </div>\n        \n        <table>\n          <tr>\n            <td>Plan:</td>\n            <td>{{$json.planName}}</td>\n          </tr>\n          <tr>\n            <td>ID de Pago:</td>\n            <td>{{$json.paymentId}}</td>\n          </tr>\n          <tr>\n            <td>Suscripción:</td>\n            <td>{{$json.subscriptionId}}</td>\n          </tr>\n          <tr>\n            <td>Fecha:</td>\n            <td>{{$json.timestamp}}</td>\n          </tr>\n        </table>\n      </div>\n      \n      <p>Tu pago ha sido procesado exitosamente. Tu plan <strong>{{$json.planName}}</strong> está ahora activo.</p>\n      \n      <p><strong>¿Qué incluye tu plan?</strong></p>\n      <ul>\n        <li>✅ Acceso completo a todas las funcionalidades</li>\n        <li>✅ Scans ilimitados de seguridad</li>\n        <li>✅ Soporte prioritario</li>\n        <li>✅ Reportes detallados</li>\n      </ul>\n      \n      <a href=\"https://sentinel.crudzaso.com/billing\" class=\"button\">\n        Ver Detalles de Facturación\n      </a>\n      \n      <p style=\"font-size: 12px; color: #666; margin-top: 30px;\">\n        Si tienes alguna pregunta sobre este pago, contacta a nuestro equipo de soporte.\n      </p>\n    </div>\n    <div class=\"footer\">\n      <p>© 2025 Sentinel Security. Todos los derechos reservados.</p>\n      <p>Este es un recibo automático, por favor guárdalo para tus registros.</p>\n    </div>\n  </div>\n</body>\n</html>"
+            },
+            "name": "Send Receipt Email",
+            "type": "n8n-nodes-base.emailSend",
+            "typeVersion": 2,
+            "position": [
+                650,
+                300
+            ],
+            "credentials": {
+                "smtp": {
+                    "id": "2",
+                    "name": "SMTP Sentinel"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "functionCode": "// Log del resultado\nconst success = items[0].json;\n\nconsole.log('✅ Recibo enviado');\nconsole.log('💰 Monto:', success.amount, success.currency);\nconsole.log('📧 Email:', success.userEmail);\nconsole.log('📊 Plan:', success.planName);\n\nreturn items;"
+            },
+            "name": "Log Success",
+            "type": "n8n-nodes-base.function",
+            "typeVersion": 1,
+            "position": [
+                850,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "RabbitMQ Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Extract Payment Data",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Extract Payment Data": {
+            "main": [
+                [
+                    {
+                        "node": "Send Receipt Email",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Send Receipt Email": {
+            "main": [
+                [
+                    {
+                        "node": "Log Success",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": true,
+    "settings": {},
+    "versionId": "1",
+    "id": "3",
+    "meta": {
+        "instanceId": "sentinel-n8n"
+    },
+    "tags": []
+}

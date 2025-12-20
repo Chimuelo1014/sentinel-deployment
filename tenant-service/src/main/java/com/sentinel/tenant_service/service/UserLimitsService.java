@@ -113,6 +113,38 @@ public class UserLimitsService {
         }
     }
 
+    /**
+     * ✅ Obtiene el máximo de tenants permitidos según el plan del usuario
+     */
+    public int getMaxTenantsForPlan(String userPlan) {
+        if (userPlan == null) {
+            return 0; // FREE plan por defecto
+        }
+
+        return switch (userPlan.toUpperCase()) {
+            case "FREE" -> 0; // Solo puede ser invitado, no puede crear workspaces
+            case "PRO", "PROFESSIONAL" -> 3; // 3 workspaces
+            case "ENTERPRISE" -> 6; // 6 workspaces
+            default -> 0;
+        };
+    }
+
+    /**
+     * ✅ Obtiene el máximo de proyectos por tenant según el plan del usuario
+     */
+    public int getMaxProjectsPerTenantForPlan(String userPlan) {
+        if (userPlan == null) {
+            return 0;
+        }
+
+        return switch (userPlan.toUpperCase()) {
+            case "FREE" -> 0; // No puede crear proyectos
+            case "PRO", "PROFESSIONAL" -> 6; // 6 proyectos por workspace
+            case "ENTERPRISE" -> 12; // 12 proyectos por workspace
+            default -> 0;
+        };
+    }
+
     private int getMaxTenants(String plan) {
         return switch (plan.toUpperCase()) {
             case "FREE" -> 0; // FREE: cannot create tenants

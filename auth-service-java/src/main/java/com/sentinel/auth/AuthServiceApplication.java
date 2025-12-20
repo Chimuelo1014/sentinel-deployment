@@ -10,7 +10,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableFeignClients(basePackages = "com.sentinel.auth.client")
 @EnableScheduling
 @EnableAsync
-@org.springframework.context.annotation.ComponentScan(basePackages = "com.sentinel.auth")
 public class AuthServiceApplication {
 
     public static void main(String[] args) {
